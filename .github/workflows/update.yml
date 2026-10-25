@@ -21,7 +21,7 @@ jobs:
       - name: Update sources.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./update.sh
+        run: bash update.sh
 
       - name: Update flake.lock
         run: nix flake update
