@@ -1,0 +1,47 @@
+name: Update Axolotl Launcher
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update sources.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./update.sh
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Build
+        run: nix build .#axolotl-launcher -L
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          version=$(jq -r .version sources.json)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sources.json flake.lock
+          if git diff --cached --quiet -- sources.json; then
+            git commit -m "flake.lock: update"
+          else
+            git commit -m "axolotl-launcher: update to $version"
+          fi
+          git push
