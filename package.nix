@@ -127,6 +127,10 @@ buildFHSEnv {
       libusb1
     ];
 
+  # NVIDIA's libEGL finds its Wayland/GBM platform libraries via the host's
+  # /etc/egl; without it EGL falls back to Mesa, which ends up on llvmpipe
+  extraBwrapArgs = [ "--ro-bind-try /etc/egl /etc/egl" ];
+
   profile = ''
     set -o allexport
     ${lib.toShellVars launchEnv}
